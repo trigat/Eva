@@ -35,7 +35,7 @@ This approach helps evade EDR, content inspection, and firewall filtering.
 3. In a separate terminal, base64-encode the command you want the remote machine to execute.
    Important: Your command MUST end with a newline (`\n`) so the PowerShell script knows when to execute it.
 
-    Example (to create a folder on the remote system):
+    Example (run command 'whoami' on the remote system):
 
     echo -en 'whoami\n' | base64
     d2hvYW1pCg==
