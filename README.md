@@ -27,8 +27,10 @@ This approach helps evade EDR, content inspection, and firewall filtering.
 
     python3 Eva.py https://proxy-domain.com:443
 
-2. Deploy the generated beacon via Windows command prompt or O.MG USB device.
-   The IP address can be manually changed.
+2. Select and deploy your desired beacon. Generated payloads can be found in the /qd/ directory.
+   O.MG Cable compatible payloads are available in /qd/OMG/.
+
+   The IP address within the payload can be manually changed.
 
 3. In a separate terminal, base64-encode the command you want the remote machine to execute.
    Important: Your command MUST end with a newline (`\n`) so the PowerShell script knows when to execute it.

